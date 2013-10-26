@@ -43,7 +43,7 @@ int init(SDL_Surface **screen)
 int scroll(int *bg_x, int *bg_y, SDL_Surface *background, SDL_Surface *screen,
         SDL_Surface *spaceship)
 {
-    int offset = SDL_GetTicks() / 5000 + 1;
+    int offset = SDL_GetTicks() / 5000 + 16;
     *bg_x -= 1 * offset;
     if (*bg_x <= -background->w)
         *bg_x = 0;
@@ -62,37 +62,38 @@ int collision(int spaceship_x, int obstacle_x, int offset)
     return 0;
 }
 
-void draw(SDL_Surface *screen, s_asteroid **list_asteroid, int *bg_x, int *bg_y)
+SDL_Surface *score(int *points, int offset, SDL_Surface **screen)
+{   
+    SDL_Color white = {255, 255, 255};
+    SDL_Rect pos;
+    pos.x = 0;
+    pos.y = 0;
+    char score[100];
+    TTF_Font *police = TTF_OpenFont("leadcoat.ttf", 50);
+    *points = *points + offset;
+    sprintf(score, "score : %d", *points);
+    SDL_Surface *text = TTF_RenderText_Blended(police, score, white);
+    apply_surface(pos.x, pos.y, text, *screen);
+    return *screen;
+}
+
+void draw(SDL_Surface *screen, s_asteroid **list_asteroid, int *bg_x, int *bg_y
+        ,int *points)
 {
     SDL_Surface *background = load_image("../check/background.bmp");
     SDL_Surface *spaceship = load_image("../check/spaceship.bmp");
-    //SDL_Color black = {0, 0, 0};
     SDL_SetColorKey(spaceship, SDL_SRCCOLORKEY, SDL_MapRGB(spaceship->format,
                 0, 0, 0));
     apply_surface(0, 0, background, screen);
-    //SDL_Rect pos;
-    //pos.x = 0;
-    //pos.y = 0;
-    //TTF_Init();
-    //char score[100];
-    //int points = 0;
-    //sprintf(score, "score : %d", points);
-    //TTF_Font *police = TTF_OpenFont("leadcoat.ttf", 50);
-    //SDL_Surface *text = TTF_RenderText_Blended(police, "score = 0", black);
+
     int offset = scroll(bg_x, bg_y, background, screen, spaceship);
     *list_asteroid = addelt(*list_asteroid, offset);
     drawelt(&screen, *list_asteroid);
+    SDL_Surface *text = score(points, offset, &screen);
     SDL_Flip(screen);
     SDL_FreeSurface(background);
     SDL_FreeSurface(spaceship);
-    //sprintf(score, "score : %d", points);
-    //SDL_FreeSurface(text);
-    //pos.x = 0;
-    //pos.y = 0;
-    //text = TTF_RenderText_Blended(police, score, black);
-    //points += offset;
-    //apply_surface(pos.x, pos.y, text,background);
-
+    SDL_FreeSurface(text);
 }
 
 int main(void)
@@ -103,6 +104,8 @@ int main(void)
     SDL_Event event;
     SDL_Surface *screen = NULL;
     init(&screen);
+    TTF_Init();
+    int points = 0;
     s_asteroid *list_asteroid = NULL;
     while (!quit)
     {
@@ -111,7 +114,7 @@ int main(void)
             if (event.type == SDL_QUIT)
                 quit = 1;
         }
-        draw(screen, &list_asteroid, &bg_x, &bg_y);
+        draw(screen, &list_asteroid, &bg_x, &bg_y, &points);
         /*if (collision(10, 340, bg_x))
           {
           bg_x = 0;
