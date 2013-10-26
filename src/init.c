@@ -1,5 +1,7 @@
 #include "init.h"
 
+long long int timer;
+
 SDL_Surface *load_image(const char *filename)
 {
     SDL_Surface *loaded_image = NULL;
@@ -36,17 +38,16 @@ int init(SDL_Surface **screen)
         printf("Can't set video mode: %s\n", SDL_GetError());
         return EXIT_FAILURE;
     }
-    SDL_WM_SetCaption( "EpiRun", NULL);
+    SDL_WM_SetCaption("\\o/ EpiRun \\o/", NULL);
     return EXIT_SUCCESS;
 }
 
 int scroll(s_bg *backg, SDL_Surface *screen, s_spaceship *s)
 {
-    int offset = SDL_GetTicks() / 5000 + 1 - (s->coll * 3);
-    if (offset < 1)
+    int offset = timer / 100 - (s->coll * 5);
+    if (offset > 50)
     {
-        offset = 1;
-        s->coll -= 1;
+        offset = 50;
     }
     backg->x -= 1 * offset;
     if (backg->x <= -backg->surf->w)
@@ -106,9 +107,9 @@ void treat_collision(s_asteroid *elt, s_spaceship *s)
 
 SDL_Surface *score(s_spaceship *s, int offset, SDL_Surface **screen)
 {
-    SDL_Color white = {255, 255, 255};
+    SDL_Color white = {255, 255, 255, 255};
     char score[100];
-    TTF_Font *police = TTF_OpenFont("../check/leadcoat.ttf", 50);
+    TTF_Font *police = TTF_OpenFont("check/leadcoat.ttf", 50);
     s->points += offset;
     sprintf(score, "score : %d", s->points);
     SDL_Surface *text = TTF_RenderText_Blended(police, score, white);
@@ -143,7 +144,7 @@ void init_spaceship(s_spaceship *s)
     SDL_Rect ship_rect;
     ship_rect.x = 10;
     ship_rect.y = 240;
-    s->surf = load_image("../check/spaceship.bmp");
+    s->surf = load_image("check/spaceship.bmp");
     s->rect = ship_rect;
     s->life = 3;
     s->coll = 0;
@@ -151,7 +152,7 @@ void init_spaceship(s_spaceship *s)
 
 void init_background(s_bg *background)
 {
-    background->surf = load_image("../check/background.bmp");
+    background->surf = load_image("check/background2.bmp");
     background->x = 0;
     background->y = 0;
 }
@@ -162,33 +163,33 @@ void handle_keys(const uint8_t *state, s_spaceship *s)
       {
         if (s->rect.y > (SCREEN_HEIGHT - SHIP_HEIGHT))
             s->rect.y = 400;
-        s->rect.y += 2;
+        s->rect.y += 4;
       }
       if (state[SDLK_UP])
       {
         if (s->rect.y > 15)
-            s->rect.y -= 2;
+            s->rect.y -= 4;
       }
       if (state[SDLK_LEFT])
       {
         if (s->rect.x > 15)
-            s->rect.x -= 2;
+            s->rect.x -= 4;
       }
       if (state[SDLK_RIGHT])
       {
         if (s->rect.x > (SCREEN_WIDTH - SHIP_WIDTH))
             s->rect.x = 520;
-        s->rect.x += 2;
+        s->rect.x += 4;
       }
 }
 
-int gameover(SDL_Surface **screen, s_spaceship *s)
+void gameover(SDL_Surface **screen, s_spaceship *s)
 {
-    SDL_Color white = {255, 255, 255};
+    SDL_Color white = {255, 255, 255, 255};
     s_bg *backg = malloc(sizeof (s_bg));
     init_background(backg);
     apply_surface(0, 0, backg->surf, *screen);
-    TTF_Font *police = TTF_OpenFont("../check/leadcoat.ttf", 50);
+    TTF_Font *police = TTF_OpenFont("check/leadcoat.ttf", 50);
     char score[100];
     sprintf(score, "score : %d", s->points);
     SDL_Surface *text = TTF_RenderText_Blended(police, score, white);
@@ -197,9 +198,23 @@ int gameover(SDL_Surface **screen, s_spaceship *s)
     sprintf(over, "GAME OVER");
     text = TTF_RenderText_Blended(police, over, white);
     apply_surface(SCREEN_WIDTH / 2 - text->w / 2, SCREEN_HEIGHT / 2 - 50, text, *screen);
+    TTF_Font *cont = TTF_OpenFont("check/leadcoat.ttf", 30);
+    char todo[30];
+    sprintf(todo, "press enter to restart");
+    text = TTF_RenderText_Blended(cont, todo, white);
+    apply_surface(SCREEN_WIDTH - text->w, SCREEN_HEIGHT - text->h, text, *screen);
     SDL_Flip(*screen);
-    SDL_Delay(5000);
-    return 1;
+/*    SDL_Event event;
+    while (1)
+    {
+
+        if (state[SDLK_ESCAPE])
+            return 1;
+        if (state[SDLK_KP_ENTER])
+            return 0;
+    }
+    free(text);*/
+   // return 1;
 }
 void music()
 {
@@ -215,13 +230,14 @@ void music()
   }
 
   Mix_Music *music;
-  music = Mix_LoadMUS("../check/beep-1.wav");
+  music = Mix_LoadMUS("check/beep-1.wav");
   Mix_PlayMusic(music, -1);
 }
 
 int main(void)
 {
     int quit = 0;
+    timer = 0;
     SDL_Event event;
     SDL_Surface *screen = NULL;
     SDL_EnableKeyRepeat(100, 100);
@@ -239,6 +255,7 @@ int main(void)
     //launch_audio("son.wav");
     while (!quit)
     {
+        timer += 1;
         handle_keys(state, spaceship);
         while (SDL_PollEvent(&event))
             if (event.type == SDL_QUIT)
@@ -247,7 +264,36 @@ int main(void)
         if (collision(spaceship, list_asteroid))
             treat_collision(collision(spaceship, list_asteroid), spaceship);
         if (spaceship->life <= 0)
-            quit = gameover(&screen, spaceship);
+        {
+            int quit2 = 0;
+            gameover(&screen, spaceship);
+            while (!quit2)
+            {
+                if (state[SDLK_RETURN])
+                {
+                    timer = 0;
+                    free(backg);
+                    free(spaceship);
+                    s_bg *backg = malloc(sizeof (s_bg));
+                    s_spaceship *spaceship = malloc(sizeof (s_spaceship));
+                    init_spaceship(spaceship);
+                    init_background(backg);
+                    freelist(&list_asteroid);
+                    quit2 = 1;
+                }
+                if (state[SDLK_ESCAPE])
+                {
+                    quit = 1;
+                    quit2 = 1;
+                }
+                while (SDL_PollEvent(&event))
+                    if (event.type == SDL_QUIT)
+                    {
+                        quit2 = 1;
+                        quit = 1;
+                    }
+            }
+        }
     }
     //SDL_Delay(3000);
     SDL_Quit();
