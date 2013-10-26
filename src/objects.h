@@ -1,13 +1,9 @@
 #ifndef OBJECTS_H
 # define OBJECTS_H
 
-# include <stdlib.h>
-# include <stdio.h>
-# include <SDL/SDL.h>
 # include <time.h>
+# include "init.h"
 
-# define WIDTH 564
-# define HEIGHT 386
 
 typedef struct asteroid s_asteroid;
 
@@ -15,11 +11,12 @@ struct asteroid
 {
     int posx;
     int posy;
+    s_asteroid *prev;
+    s_asteroid *next;
     SDL_Surface *surf;
-    SDL_Rect rect;
 };
-s_asteroid *init_list(void);
-s_asteroid *addelt(SDL_Surface *screen, s_asteroid *listaste, int offset);
- SDL_Surface * addsurface(SDL_Surface *screen, int posx, int posy, char *path);
+void drawelt(SDL_Surface **screen, s_asteroid *listaste);
+s_asteroid *addelt(s_asteroid *listaste, int offset);
+SDL_Surface * addsurface(SDL_Surface *screen, int posx, int posy, char *path);
 
 #endif /* !OBJECTS_H */

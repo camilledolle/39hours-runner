@@ -1,11 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <SDL/SDL.h>
-#include "objects.h"
-
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 480
-#define SCREEN_BPP 32
+#include "init.h"
 
 SDL_Surface *load_image(const char *filename)
 {
@@ -36,7 +29,8 @@ int init(SDL_Surface **screen)
         return EXIT_FAILURE;
     }
     atexit(SDL_Quit);
-    *screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 16, SDL_HWSURFACE);
+    *screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 16,
+            SDL_HWSURFACE | SDL_DOUBLEBUF);
     if (*screen == NULL)
     {
         printf("Can't set video mode: %s\n", SDL_GetError());
@@ -49,15 +43,15 @@ int init(SDL_Surface **screen)
 int scroll(int *bg_x, int *bg_y, SDL_Surface *background, SDL_Surface *screen,
         SDL_Surface *spaceship)
 {
-    int offset = SDL_GetTicks() / 5000;
+    int offset = SDL_GetTicks() / 5000 + 1;
     *bg_x -= 1 * offset;
     if (*bg_x <= -background->w)
         *bg_x = 0;
     apply_surface(*bg_x, *bg_y, background, screen);
     apply_surface(*bg_x + background->w, *bg_y, background, screen);
     apply_surface(10, 240, spaceship, screen);
-    if (SDL_Flip(screen) == -1)
-        return EXIT_FAILURE;
+    //if (SDL_Flip(screen) == -1)
+     //   return EXIT_FAILURE;
     return offset;
 }
 
@@ -68,7 +62,40 @@ int collision(int spaceship_x, int obstacle_x, int offset)
     return 0;
 }
 
-int main(int argc, char *argv[])
+void draw(SDL_Surface *screen, s_asteroid **list_asteroid, int *bg_x, int *bg_y)
+{
+    SDL_Surface *background = load_image("../check/background.bmp");
+    SDL_Surface *spaceship = load_image("../check/spaceship.bmp");
+    //SDL_Color black = {0, 0, 0};
+    SDL_SetColorKey(spaceship, SDL_SRCCOLORKEY, SDL_MapRGB(spaceship->format,
+                0, 0, 0));
+    apply_surface(0, 0, background, screen);
+    //SDL_Rect pos;
+    //pos.x = 0;
+    //pos.y = 0;
+    //TTF_Init();
+    //char score[100];
+    //int points = 0;
+    //sprintf(score, "score : %d", points);
+    //TTF_Font *police = TTF_OpenFont("leadcoat.ttf", 50);
+    //SDL_Surface *text = TTF_RenderText_Blended(police, "score = 0", black);
+    int offset = scroll(bg_x, bg_y, background, screen, spaceship);
+    *list_asteroid = addelt(*list_asteroid, offset);
+    drawelt(&screen, *list_asteroid);
+    SDL_Flip(screen);
+    SDL_FreeSurface(background);
+    SDL_FreeSurface(spaceship);
+    //sprintf(score, "score : %d", points);
+    //SDL_FreeSurface(text);
+    //pos.x = 0;
+    //pos.y = 0;
+    //text = TTF_RenderText_Blended(police, score, black);
+    //points += offset;
+    //apply_surface(pos.x, pos.y, text,background);
+
+}
+
+int main(void)
 {
     int bg_x = 0;
     int bg_y = 0;
@@ -76,17 +103,7 @@ int main(int argc, char *argv[])
     SDL_Event event;
     SDL_Surface *screen = NULL;
     init(&screen);
-    SDL_Surface *background = load_image("../check/background.bmp");
-    SDL_Surface *spaceship = load_image("../check/spaceship.bmp");
-    SDL_Surface *asteroid = load_image("../check/asteroids1.bmp");
-    SDL_SetColorKey(spaceship, SDL_SRCCOLORKEY, SDL_MapRGB(spaceship->format,
-                0, 0, 0));
-    apply_surface(0, 0, background, screen);
-    //apply_surface(340, 220, asteroid, background);
-    SDL_Flip(screen);
-    s_asteroid *list_asteroid = init_list();
-    //apply_surface(10, 240, spaceship, screen);
-    //SDL_Flip(screen);
+    s_asteroid *list_asteroid = NULL;
     while (!quit)
     {
         while (SDL_PollEvent(&event))
@@ -94,13 +111,12 @@ int main(int argc, char *argv[])
             if (event.type == SDL_QUIT)
                 quit = 1;
         }
-        int offset = scroll(&bg_x, &bg_y, background, screen, spaceship);
-        addelt(background, list_asteroid, offset);
+        draw(screen, &list_asteroid, &bg_x, &bg_y);
         /*if (collision(10, 340, bg_x))
-        {
-            bg_x = 0;
-            bg_y = 0;
-        }*/
+          {
+          bg_x = 0;
+          bg_y = 0;
+          }*/
         //SDL_Delay(3000);
     }
     SDL_Quit();

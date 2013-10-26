@@ -19,60 +19,65 @@ static void apply_surface(int x, int y, SDL_Surface *src, SDL_Surface *dst)
     SDL_BlitSurface(src, NULL, dst, &offset);
 }
 
-static s_asteroid *initas(SDL_Surface *bg, int px, int py,  s_asteroid *list)
+
+static s_asteroid *initas(int px, int py,  s_asteroid *list)
 {
-    int i = 0;
-    while (i < 500 && list[i].posy >= 0)
-        i++;
-    if (i == 500)
-        return list;
-    s_asteroid new;
-    new.posx = px;
-    new.posy = py;
-    new.rect.x = px;
-    new.rect.y = py;
-    new.surf = SDL_LoadBMP("../check/asteroids1.bmp");
-    SDL_SetColorKey(new.surf, SDL_SRCCOLORKEY, SDL_MapRGB(new.surf->format,
+    static SDL_Surface *asteroid = NULL;
+    if (!asteroid)
+        asteroid = SDL_LoadBMP("../check/asteroids1.bmp");
+    s_asteroid *new = malloc(sizeof (s_asteroid));
+    new->posx = px;
+    new->posy = py;
+    new->prev = list;
+    if (list)
+        list->next = new;
+    new->next = NULL;
+    new->surf = asteroid;
+    SDL_SetColorKey(new->surf, SDL_SRCCOLORKEY, SDL_MapRGB(new->surf->format,
                 0, 0, 0));
-    apply_surface(px, py, new.surf, bg);
-    SDL_Flip(bg);
-    list[i] = new;
-    //SDL_BlitSurface(new->surf, NULL, sc, &new->rect);
-    return list;
+    return new;
 }
 
-static void updateaste(SDL_Surface *screen, s_asteroid *listaste, int offset)
+static void updateaste(s_asteroid **listaste, int offset)
 {
-    int i = 0;
-    while (i < 500)
+    s_asteroid *tmp = *listaste;
+    while (tmp)
     {
-        if (listaste[i].posy >= 0 && listaste[i].posx < offset)
+        if (tmp->posx < offset)
         {
-            printf("free\n");
-            listaste[i].posy = -1;
-            SDL_FreeSurface(listaste[i].surf);
-            SDL_Flip(screen);
+            if (tmp->next)
+                tmp->next->prev = tmp->prev;
+            if (tmp->prev)
+                tmp->prev->next = tmp->next;
+            if (!tmp->prev && !tmp->next)
+            {
+                free(tmp);
+                *listaste = NULL;
+            }
+            free(tmp);
         }
         else
-            listaste[i].posx -= offset;
-        i++;
+            tmp->posx -= offset;
+        tmp = tmp->prev;
     }
 }
 
-s_asteroid *addelt(SDL_Surface *screen, s_asteroid *listaste, int offset)
+s_asteroid *addelt(s_asteroid *listaste, int offset)
 {
-    srand(time(NULL));
     int rando = rand();
-    if (rando % 100 <= 3)
-        listaste = initas(screen, WIDTH - 10 ,rando % (HEIGHT - 59), listaste);
-    updateaste(screen, listaste, offset);
+    if (rando % 100 <= 5)
+        listaste = initas(SCREEN_WIDTH + rando % (SCREEN_WIDTH - 50),
+                rando % (SCREEN_HEIGHT - 59), listaste);
+    updateaste(&listaste, offset);
     return listaste;
 }
 
-s_asteroid *init_list(void)
+void drawelt(SDL_Surface **screen, s_asteroid *listaste)
 {
-    s_asteroid *list = malloc(sizeof (s_asteroid) * 500);
-    for (int i = 0; i < 500; i++)
-        list[i].posy = -1;
-    return list;
+    s_asteroid *tmp = listaste;
+    while (tmp)
+    {
+        apply_surface(tmp->posx, tmp->posy, tmp->surf, *screen);
+        tmp = tmp->prev;
+    }
 }
