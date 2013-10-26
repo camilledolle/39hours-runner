@@ -201,6 +201,23 @@ int gameover(SDL_Surface **screen, s_spaceship *s)
     SDL_Delay(5000);
     return 1;
 }
+void music()
+{
+  int audio_rate = 22050;
+  Uint16 audio_format = AUDIO_S16; /* 16-bit stereo */
+  int audio_channels = 2;
+  int audio_buffers = 4096;
+
+  Mix_QuerySpec(&audio_rate, &audio_format, &audio_channels);
+  if (Mix_OpenAudio(audio_rate, audio_format, audio_channels, audio_buffers))
+  {
+      printf("Unable to open audio!\n");
+  }
+
+  Mix_Music *music;
+  music = Mix_LoadMUS("../check/beep-1.wav");
+  Mix_PlayMusic(music, -1);
+}
 
 int main(void)
 {
@@ -215,6 +232,7 @@ int main(void)
     s_bg *backg = malloc(sizeof (s_bg));
     init_spaceship(spaceship);
     init_background(backg);
+    music();
     const uint8_t *state = SDL_GetKeyState(NULL);
     //uint32_t audioLen = 100;
     //uint32_t audioPos;
