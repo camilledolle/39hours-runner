@@ -19,20 +19,29 @@ static void apply_surface(int x, int y, SDL_Surface *src, SDL_Surface *dst)
     SDL_BlitSurface(src, NULL, dst, &offset);
 }
 
-
-static s_asteroid *initas(int px, int py,  s_asteroid *list)
+static SDL_Surface *init_image(SDL_Surface *asteroid, int type)
 {
-    static SDL_Surface *asteroid = NULL;
-    if (!asteroid)
+    if (!asteroid && type == 1)
         asteroid = SDL_LoadBMP("../check/asteroids1.bmp");
+    else if (!asteroid && type == 3)
+        asteroid = SDL_LoadBMP("../check/forcefield.bmp");
+    else if (!asteroid && type == 4)
+        asteroid = SDL_LoadBMP("../check/battery.bmp");
+    return asteroid;
+}
+static s_asteroid *initas(SDL_Rect pos, s_asteroid *list, int type)
+{
+    SDL_Surface *asteroid = NULL;
+    asteroid = init_image(asteroid, type);
     s_asteroid *new = malloc(sizeof (s_asteroid));
-    new->posx = px;
-    new->posy = py;
+    new->posx = pos.x;
+    new->posy = pos.y;
     new->prev = list;
     if (list)
         list->next = new;
     new->next = NULL;
     new->surf = asteroid;
+    new->type = type; 
     SDL_SetColorKey(new->surf, SDL_SRCCOLORKEY, SDL_MapRGB(new->surf->format,
                 0, 0, 0));
     return new;
@@ -43,7 +52,7 @@ static void updateaste(s_asteroid **listaste, int offset)
     s_asteroid *tmp = *listaste;
     while (tmp)
     {
-        if (tmp->posx < offset)
+        if (tmp->posx > 2 * SCREEN_WIDTH && tmp->posx < offset)
         {
             if (tmp->next)
                 tmp->next->prev = tmp->prev;
@@ -65,9 +74,15 @@ static void updateaste(s_asteroid **listaste, int offset)
 s_asteroid *addelt(s_asteroid *listaste, int offset)
 {
     int rando = rand();
-    if (rando % 100 <= 5)
-        listaste = initas(SCREEN_WIDTH + rando % (SCREEN_WIDTH - 50),
-                rando % (SCREEN_HEIGHT - 59), listaste);
+    SDL_Rect pos;
+    pos.x = SCREEN_WIDTH + rando % (SCREEN_WIDTH - 50);
+    pos.y =  rando % (SCREEN_HEIGHT - 59);
+    if (rando % 100 <= 2 + offset / 3)
+        listaste = initas(pos, listaste, 1);
+    if (rando % 1000 >= 995)
+        listaste = initas(pos, listaste, 4);
+    if (rando % 100 == 99)
+        listaste = initas(pos,listaste, 3);
     updateaste(&listaste, offset);
     return listaste;
 }
