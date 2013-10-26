@@ -40,10 +40,9 @@ int init(SDL_Surface **screen)
     return EXIT_SUCCESS;
 }
 
-int scroll(s_bg *backg, SDL_Surface *screen,
-        s_spaceship *s)
+int scroll(s_bg *backg, SDL_Surface *screen, s_spaceship *s)
 {
-    int offset = SDL_GetTicks() / 5000 + 1;
+    int offset = SDL_GetTicks() / 5000 + 1 - (s->coll * 3);
     backg->x -= 1 * offset;
     if (backg->x <= -backg->surf->w)
         backg->x = 0;
@@ -101,6 +100,8 @@ void draw(SDL_Surface *screen, s_spaceship *s, s_asteroid **list_asteroid,
 void init_spaceship(s_spaceship *s)
 {
     s->points = 0;
+    s->life = 3;
+    s->coll = 0;
     SDL_Rect ship_rect;
     ship_rect.x = 10;
     ship_rect.y = 240;
