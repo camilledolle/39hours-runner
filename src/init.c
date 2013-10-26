@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <SDL/SDL.h>
+#include "objects.h"
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -48,7 +49,8 @@ int init(SDL_Surface **screen)
 int scroll(int *bg_x, int *bg_y, SDL_Surface *background, SDL_Surface *screen,
         SDL_Surface *spaceship)
 {
-    *bg_x -= 1 * (SDL_GetTicks() / 6000);
+    int offset = SDL_GetTicks() / 5000;
+    *bg_x -= 1 * offset;
     if (*bg_x <= -background->w)
         *bg_x = 0;
     apply_surface(*bg_x, *bg_y, background, screen);
@@ -56,7 +58,7 @@ int scroll(int *bg_x, int *bg_y, SDL_Surface *background, SDL_Surface *screen,
     apply_surface(10, 240, spaceship, screen);
     if (SDL_Flip(screen) == -1)
         return EXIT_FAILURE;
-    return 0;
+    return offset;
 }
 
 int collision(int spaceship_x, int obstacle_x, int offset)
@@ -80,8 +82,9 @@ int main(int argc, char *argv[])
     SDL_SetColorKey(spaceship, SDL_SRCCOLORKEY, SDL_MapRGB(spaceship->format,
                 0, 0, 0));
     apply_surface(0, 0, background, screen);
-    apply_surface(340, 220, asteroid, background);
+    //apply_surface(340, 220, asteroid, background);
     SDL_Flip(screen);
+    s_asteroid *list_asteroid = init_list();
     //apply_surface(10, 240, spaceship, screen);
     //SDL_Flip(screen);
     while (!quit)
@@ -91,12 +94,13 @@ int main(int argc, char *argv[])
             if (event.type == SDL_QUIT)
                 quit = 1;
         }
-        scroll(&bg_x, &bg_y, background, screen, spaceship);
-        if (collision(10, 340, bg_x))
+        int offset = scroll(&bg_x, &bg_y, background, screen, spaceship);
+        addelt(background, list_asteroid, offset);
+        /*if (collision(10, 340, bg_x))
         {
             bg_x = 0;
             bg_y = 0;
-        }
+        }*/
         //SDL_Delay(3000);
     }
     SDL_Quit();

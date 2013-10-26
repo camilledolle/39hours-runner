@@ -18,8 +18,8 @@ struct asteroid
     SDL_Surface *surf;
     SDL_Rect rect;
 };
-
-s_asteroid *addelt(SDL_Surface *screen, s_asteroid *listaste);
+s_asteroid *init_list(void);
+s_asteroid *addelt(SDL_Surface *screen, s_asteroid *listaste, int offset);
  SDL_Surface * addsurface(SDL_Surface *screen, int posx, int posy, char *path);
 
 #endif /* !OBJECTS_H */
