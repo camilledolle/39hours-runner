@@ -1,0 +1,11 @@
+What has been done:
+- Infinite scolling
+- Asteroids as obstacles
+- Game over handling (when no lives left the game ends)
+- Dificulty increases with time (speed is increased)
+- Score gets higher when you do further
+- Collectables: batteries for one more life and rings for more points
+- Sound during the game
+
+What needs to be done:
+- A menu
