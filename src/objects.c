@@ -77,11 +77,11 @@ s_asteroid *addelt(s_asteroid *listaste, int offset)
     SDL_Rect pos;
     pos.x = SCREEN_WIDTH + rando % (SCREEN_WIDTH - 50);
     pos.y =  rando % (SCREEN_HEIGHT - 59);
-    if (rando % 100 <= 2 + offset / 3)
+    if (rando % 100 < offset / 3)
         listaste = initas(pos, listaste, 1);
-    if (rando % 1000 >= 995)
+    if (rando % 1000 >= 995 && rando % 1000 < 999)
         listaste = initas(pos, listaste, 4);
-    if (rando % 100 == 99)
+    if (rando % 1000 == 999)
         listaste = initas(pos,listaste, 3);
     updateaste(&listaste, offset);
     return listaste;

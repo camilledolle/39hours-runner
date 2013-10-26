@@ -12,7 +12,7 @@
 # define SCREEN_BPP 32
 # define SHIP_HEIGHT 80
 # define SHIP_WIDTH 120
-
+/*
 typedef struct all s_all
 struct all
 {
@@ -21,18 +21,17 @@ struct all
     s_asteroid *items;
     SDL_Surface *screen;
 }
-
+*/
 
 typedef struct spaceship s_spaceship;
 struct spaceship
 {
     int points;
-    int life;
     int coll;
+    int life;
     SDL_Surface *surf;
     SDL_Rect rect;
 };
-
 
 typedef struct background s_bg;
 struct background
