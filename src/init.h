@@ -16,10 +16,12 @@
 typedef struct spaceship s_spaceship;
 struct spaceship
 {
+    int points;
+    int coll;
+    int life;
     SDL_Surface *surf;
     SDL_Rect rect;
 };
-
 
 typedef struct background s_bg;
 struct background

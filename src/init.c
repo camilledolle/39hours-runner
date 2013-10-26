@@ -23,7 +23,7 @@ void apply_surface(int x, int y, SDL_Surface* src, SDL_Surface* dst)
 
 int init(SDL_Surface **screen)
 {
-    if (SDL_Init(SDL_INIT_VIDEO) == -1)
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) == -1)
     {
         printf("Can't init SDL:  %s\n", SDL_GetError());
         return EXIT_FAILURE;
@@ -43,34 +43,77 @@ int init(SDL_Surface **screen)
 int scroll(s_bg *backg, SDL_Surface *screen,
         s_spaceship *s)
 {
-    int offset = SDL_GetTicks() / 5000 + 1;
+    int offset = SDL_GetTicks() / 5000 + 1 - (s->coll * 3);
+    if (offset < 1)
+    {
+        offset = 1;
+//        s->coll = 0;
+    }
     backg->x -= 1 * offset;
     if (backg->x <= -backg->surf->w)
         backg->x = 0;
     apply_surface(backg->x, backg->y, backg->surf, screen);
     apply_surface(backg->x + backg->surf->w, backg->y, backg->surf, screen);
-    //apply_surface(s->rect.x, s->rect.y, s->surf, screen);
-    //if (SDL_Flip(screen) == -1)
-     //   return EXIT_FAILURE;
     return offset;
 }
 
-int collision(int spaceship_x, int obstacle_x, int offset)
+s_asteroid *collision(s_spaceship *s, s_asteroid *list)
 {
-    if ((obstacle_x + offset) == spaceship_x)
-        return 1;
-    return 0;
+    s_asteroid *tmp = list;
+    while (tmp)
+    {
+        if (((tmp->posx) > (s->rect.x)
+            && tmp->posx < (s->rect.x + s->surf->w)
+            && tmp->posy + tmp->surf->h > (s->rect.y)
+            && tmp->posy + tmp->surf->h < (s->rect.y + s->surf->h))
+        || (tmp->posx + tmp->surf->w > (s->rect.x)
+            && tmp->posx + tmp->surf->w < (s->rect.x + s->surf->w)
+            && tmp->posy > (s->rect.y)
+            && tmp->posy < (s->rect.y + s->surf->h))
+        || ((tmp->posx) + tmp->surf->w > (s->rect.x)
+            && tmp->posx + tmp->surf->w < (s->rect.x + s->surf->w)
+            && tmp->posy + tmp->surf->h > (s->rect.y)
+            && tmp->posy + tmp->surf->h < (s->rect.y + s->surf->h))
+        || ((tmp->posx) > (s->rect.x)
+            && tmp->posx < (s->rect.x + s->surf->w)
+            && tmp->posy > (s->rect.y)
+            && tmp->posy < (s->rect.y + s->surf->h)))
+            return tmp;
+        tmp = tmp->prev;
+    }
+    return NULL;
+}
+
+void treat_collision(s_asteroid *elt, s_spaceship *s)
+{
+    switch (elt->type)
+    {
+        case 1:
+        case 2:
+            s->coll++;
+            s->life--;
+            break;
+        case 3:
+            s->points += 1000;
+            break;
+        case 4:
+            s->life++;
+            break;
+        default:
+            break;
+    }
+    elt->posx = -110;
 }
 
 SDL_Surface *score(s_spaceship *s, int offset, SDL_Surface **screen)
-{   
+{
     SDL_Color white = {255, 255, 255};
     SDL_Rect pos;
     pos.x = 0;
     pos.y = 0;
     char score[100];
-    TTF_Font *police = TTF_OpenFont("leadcoat.ttf", 50);
-    s->points = s->points + offset;
+    TTF_Font *police = TTF_OpenFont("../check/leadcoat.ttf", 50);
+    s->points += offset;
     sprintf(score, "score : %d", s->points);
     SDL_Surface *text = TTF_RenderText_Blended(police, score, white);
     apply_surface(pos.x, pos.y, text, *screen);
@@ -80,9 +123,6 @@ SDL_Surface *score(s_spaceship *s, int offset, SDL_Surface **screen)
 void draw(SDL_Surface *screen, s_spaceship *s, s_asteroid **list_asteroid,
         s_bg *backg)
 {
-    //SDL_Surface *background = load_image("../check/background.bmp");
-    //SDL_Surface *spaceship = load_image("../check/spaceship.bmp");
-    //SDL_Color black = {0, 0, 0};
     SDL_SetColorKey(s->surf, SDL_SRCCOLORKEY, SDL_MapRGB(s->surf->format,
                 0, 0, 0));
     apply_surface(0, 0, backg->surf, screen);
@@ -92,8 +132,6 @@ void draw(SDL_Surface *screen, s_spaceship *s, s_asteroid **list_asteroid,
     apply_surface(s->rect.x, s->rect.y, s->surf, screen);
     SDL_Surface *text = score(s, offset, &screen);
     SDL_Flip(screen);
-    //SDL_FreeSurface(backg->surf);
-    //SDL_FreeSurface(s->surf);
     //sprintf(score, "score : %d", points);
     SDL_FreeSurface(text);
 }
@@ -106,6 +144,8 @@ void init_spaceship(s_spaceship *s)
     ship_rect.y = 240;
     s->surf = load_image("../check/spaceship.bmp");
     s->rect = ship_rect;
+    s->life = 3;
+    s->coll = 0;
 }
 
 void init_background(s_bg *background)
@@ -143,10 +183,10 @@ void handle_keys(const uint8_t *state, s_spaceship *s)
 
 int main(void)
 {
-    SDL_EnableKeyRepeat(100, 100);
     int quit = 0;
     SDL_Event event;
     SDL_Surface *screen = NULL;
+    SDL_EnableKeyRepeat(100, 100);
     init(&screen);
     TTF_Init();
     s_asteroid *list_asteroid = NULL;
@@ -155,23 +195,22 @@ int main(void)
     init_spaceship(spaceship);
     init_background(backg);
     const uint8_t *state = SDL_GetKeyState(NULL);
-
+    //uint32_t audioLen = 100;
+    //uint32_t audioPos;
+    //launch_audio("son.wav");
     while (!quit)
     {
         handle_keys(state, spaceship);
         while (SDL_PollEvent(&event))
-        {
             if (event.type == SDL_QUIT)
                 quit = 1;
-        }
         draw(screen, spaceship, &list_asteroid, backg);
-        /*if (collision(10, 340, bg_x))
-          {
-          bg_x = 0;
-          bg_y = 0;
-          }*/
-        //SDL_Delay(3000);
+        if (collision(spaceship, list_asteroid))
+            treat_collision(collision(spaceship, list_asteroid), spaceship);
+        if (spaceship->life <= 0)
+            quit = 1;
     }
+    //SDL_Delay(3000);
     SDL_Quit();
     return 0;
 }
