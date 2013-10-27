@@ -4,7 +4,7 @@ void display_menu(SDL_Surface *screen, int *option,
         SDL_Event event)
 {
     TTF_Font *optionfont;
-    optionfont = TTF_OpenFont("check/leadcoat.ttf", 20);
+    optionfont = TTF_OpenFont("assets/leadcoat.ttf", 20);
 
     SDL_Color white = {255, 255, 255, 255};
     SDL_Color red = {255, 0, 0, 255};

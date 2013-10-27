@@ -319,6 +319,7 @@ void add_hscores(s_spaceship *s, FILE *f)
         }
     }
 }
+
 void display_hscores(SDL_Surface **screen, FILE *f)
 {
     SDL_Color white = {255, 255, 255, 255};
@@ -445,7 +446,7 @@ int main(void)
             if (state[SDLK_ESCAPE])
                 quit = 1;
 
-            if (state[SDLK_F1])
+            if (state[SDLK_F1] || option == 2)
             {
                 if (!spaceship2)
                 {
@@ -502,42 +503,27 @@ int main(void)
                     }
                     if (state[SDLK_ESCAPE])
                     {
-                        if (state[SDLK_RETURN])
-                        {
-                            timer = 0;
-                            free(backg);
-                            free(spaceship);
-                            s_bg *backg = malloc(sizeof (s_bg));
-                            s_spaceship *spaceship = malloc(sizeof (s_spaceship));
-                            init_spaceship(spaceship);
-                            init_background(backg);
-                            freelist(&list_asteroid);
-                            quit2 = 1;
-                        }
-                        if (state[SDLK_ESCAPE])
-                        {
-                            quit = 1;
-                            quit2 = 1;
-                        }
-                        while (SDL_PollEvent(&event))
-                            if (event.type == SDL_QUIT)
-                            {
-                                quit2 = 1;
-                                quit = 1;
-                            }
+                        quit = 1;
+                        quit2 = 1;
                     }
+                    while (SDL_PollEvent(&event))
+                        if (event.type == SDL_QUIT)
+                        {
+                            quit2 = 1;
+                            quit = 1;
+                        }
                 }
             }
-            //SDL_Delay(3000);
-            free(spaceship);
-            free(backg);
-            free(list_asteroid);
-            SDL_FreeSurface(screen);
-            TTF_Quit();
-            SDL_Quit();
-            return 0;
-        }
     }
+    free(spaceship);
+    free(backg);
+    free(list_asteroid);
+    SDL_FreeSurface(screen);
+    TTF_Quit();
     SDL_Quit();
     return 0;
+
+}
+SDL_Quit();
+return 0;
 }

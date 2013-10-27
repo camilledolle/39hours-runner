@@ -1,5 +1,5 @@
 CC=gcc
-SRCS=src/init.c src/objects.c
+SRCS=src/init.c src/objects.c src/menu.c
 OBJS=${SRCS:.c=.o}
 CFLAGS=-Wall -Werror -Wextra -std=c99 -pedantic -g -g3
 LIBFLAGS= -lSDL -lSDL_ttf -lSDL_mixer -lSDL_image
