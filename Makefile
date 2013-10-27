@@ -1,8 +1,8 @@
 CC=gcc
 SRCS=src/init.c src/objects.c
 OBJS=${SRCS:.c=.o}
-CFLAGS=-Wall -Werror -Wextra -std=c99 -pedantic
-LIBFLAGS= -lSDL -lSDL_ttf -lSDL_mixer
+CFLAGS=-Wall -Werror -Wextra -std=c99 -pedantic -g -g3
+LIBFLAGS= -lSDL -lSDL_ttf -lSDL_mixer -lSDL_image
 all: epirun
 
 epirun: ${SRCS}
@@ -12,7 +12,7 @@ check:
 	./epirun
 
 clean:
-	rm -f $(OBJS) epirun
+	rm -f $(OBJS) epirun epirun.core
 
 export: clean
 	git archive HEAD --prefix=dolle_c-epirun/ | bzip2 > dolle_c-epirun.tar.bz2
