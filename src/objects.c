@@ -22,11 +22,11 @@ static void apply_surface(int x, int y, SDL_Surface *src, SDL_Surface *dst)
 static SDL_Surface *init_image(SDL_Surface *asteroid, int type)
 {
     if (!asteroid && type == 1)
-        asteroid = SDL_LoadBMP("../check/asteroids1.bmp");
+        asteroid = SDL_LoadBMP("check/asteroids1.bmp");
     else if (!asteroid && type == 3)
-        asteroid = SDL_LoadBMP("../check/forcefield.bmp");
+        asteroid = SDL_LoadBMP("check/forcefield.bmp");
     else if (!asteroid && type == 4)
-        asteroid = SDL_LoadBMP("../check/battery.bmp");
+        asteroid = SDL_LoadBMP("check/battery.bmp");
     return asteroid;
 }
 static s_asteroid *initas(SDL_Rect pos, s_asteroid *list, int type)
