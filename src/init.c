@@ -326,7 +326,7 @@ void display_hscores(SDL_Surface **screen, FILE *f)
     s_bg *backg = malloc(sizeof (s_bg));
     init_background(backg);
     apply_surface(0, 0, backg->surf, *screen);
-    TTF_Font *police = TTF_OpenFont("check/leadcoat.ttf", 20);
+    TTF_Font *police = TTF_OpenFont("assets/leadcoat.ttf", 20);
     SDL_Rect pos_score;
     char **scores = malloc(sizeof (char *) * 5);
     int j = 0;
@@ -353,11 +353,12 @@ void display_hscores(SDL_Surface **screen, FILE *f)
         SDL_BlitSurface(s_scores[i], NULL, *screen, &pos_score);
     }
     SDL_Flip(*screen);
-    SDL_Delay(5000);
+    SDL_Delay(3000);
 }
 
-void gameover(SDL_Surface **screen, s_spaceship *s)
+void gameover(SDL_Surface **screen, s_spaceship *s, FILE *f)
 {
+    add_hscores(s, f);
     SDL_Color white = {255, 255, 255, 255};
     s_bg *backg = malloc(sizeof (s_bg));
     init_background(backg);
@@ -485,7 +486,7 @@ int main(void)
                 }
                 draw(screen, spaceship, &list_asteroid, backg);
                 SDL_Delay(3000);
-                gameover(&screen, spaceship);
+                gameover(&screen, spaceship, f);
                 while (!quit2)
                 {
                     if (state[SDLK_RETURN])
