@@ -22,11 +22,27 @@ static void apply_surface(int x, int y, SDL_Surface *src, SDL_Surface *dst)
 static SDL_Surface *init_image(SDL_Surface *asteroid, int type)
 {
     if (!asteroid && type == 1)
-        asteroid = SDL_LoadBMP("check/asteroids1.bmp");
-    else if (!asteroid && type == 3)
-        asteroid = SDL_LoadBMP("check/forcefield.bmp");
+    {
+        int rando = rand();
+        if (rando % 4 == 0)
+            asteroid = IMG_Load("assets/asteroids1.png");
+        else if (rando % 4 == 1)
+            asteroid = IMG_Load("assets/asteroids2.png");
+        else if (rando % 4 == 2)
+            asteroid = IMG_Load("assets/asteroids3.png");
+        else
+            asteroid = IMG_Load("assets/asteroids4.png");
+    }
+    else if (!asteroid && type == 5)
+        asteroid = IMG_Load("assets/forcefield.png");
     else if (!asteroid && type == 4)
-        asteroid = SDL_LoadBMP("check/battery.bmp");
+        asteroid = IMG_Load("assets/battery.png");
+    else if (!asteroid && type == 3)
+        asteroid = IMG_Load("assets/bonus.png");
+    else if (!asteroid && type == 6)
+        asteroid = IMG_Load("assets/bombe.png");
+    else if (!asteroid && type == 2)
+        asteroid = IMG_Load("assets/missile.png");
     return asteroid;
 }
 static s_asteroid *initas(SDL_Rect pos, s_asteroid *list, int type)
@@ -66,7 +82,9 @@ static void updateaste(s_asteroid **listaste, int offset)
             free(tmp);
         }
         else
-            tmp->posx -= offset;
+            if (tmp->type == 2)
+                tmp->posx -= offset;
+        tmp->posx -= offset;
         tmp = tmp->prev;
     }
 }
@@ -77,12 +95,18 @@ s_asteroid *addelt(s_asteroid *listaste, int offset)
     SDL_Rect pos;
     pos.x = SCREEN_WIDTH + rando % (SCREEN_WIDTH - 50);
     pos.y =  rando % (SCREEN_HEIGHT - 59);
-    if (rando % 100 < offset / 3)
+    if (rando % 100 < offset)
         listaste = initas(pos, listaste, 1);
-    if (rando % 1000 >= 995 && rando % 1000 < 999)
+    if (rando % 200 < 50 && rando % 200 > 47)
+        listaste = initas(pos, listaste, 2);
+    if (rando % 250 == 240)
+        listaste = initas(pos, listaste, 3);
+    if (rando % 500 == 498)
         listaste = initas(pos, listaste, 4);
-    if (rando % 1000 == 999)
-        listaste = initas(pos,listaste, 3);
+    if (rando % 2000 == 1999)
+        listaste = initas(pos,listaste, 5);
+    if (rando % 3000 == 2888)
+        listaste = initas(pos, listaste, 6);
     updateaste(&listaste, offset);
     return listaste;
 }
@@ -96,3 +120,15 @@ void drawelt(SDL_Surface **screen, s_asteroid *listaste)
         tmp = tmp->prev;
     }
 }
+
+void freelist(s_asteroid **listaste)
+{
+    s_asteroid *tmp = *listaste;
+    while (tmp)
+    {
+        tmp->posx = -110;
+        tmp = tmp->prev;
+    }
+}
+
+
