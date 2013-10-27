@@ -15,6 +15,6 @@ clean:
 	rm -f $(OBJS) epirun epirun.core
 
 export: clean
-	git archive HEAD --prefix=dolle_c-epirun/ | bzip2 > dolle_c-epirun.tar.bz2
+	git archive HEAD --prefix=dolle_c-runner/ | bzip2 > dolle_c-runner.tar.bz2
 
 .PHONY: check
