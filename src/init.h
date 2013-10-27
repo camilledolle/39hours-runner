@@ -6,8 +6,11 @@
 # include <SDL/SDL.h>
 # include <SDL/SDL_ttf.h>
 # include <SDL/SDL_mixer.h>
+# include <string.h>
 # include "objects.h"
+# include "menu.h"
 
+# define _WITH_GETLINE
 # define SCREEN_WIDTH 640
 # define SCREEN_HEIGHT 480
 # define SCREEN_BPP 32

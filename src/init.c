@@ -1,5 +1,8 @@
 #include "init.h"
 
+int high_scores[5];
+int hscores_len = 0;
+
 SDL_Surface *load_image(const char *filename)
 {
     SDL_Surface *loaded_image = NULL;
@@ -106,9 +109,9 @@ void treat_collision(s_asteroid *elt, s_spaceship *s)
 
 SDL_Surface *score(s_spaceship *s, int offset, SDL_Surface **screen)
 {
-    SDL_Color white = {255, 255, 255};
+    SDL_Color white = {255, 255, 255, 255};
     char score[100];
-    TTF_Font *police = TTF_OpenFont("../check/leadcoat.ttf", 50);
+    TTF_Font *police = TTF_OpenFont("check/leadcoat.ttf", 50);
     s->points += offset;
     sprintf(score, "score : %d", s->points);
     SDL_Surface *text = TTF_RenderText_Blended(police, score, white);
@@ -143,7 +146,7 @@ void init_spaceship(s_spaceship *s)
     SDL_Rect ship_rect;
     ship_rect.x = 10;
     ship_rect.y = 240;
-    s->surf = load_image("../check/spaceship.bmp");
+    s->surf = load_image("check/spaceship.bmp");
     s->rect = ship_rect;
     s->life = 3;
     s->coll = 0;
@@ -151,7 +154,7 @@ void init_spaceship(s_spaceship *s)
 
 void init_background(s_bg *background)
 {
-    background->surf = load_image("../check/background.bmp");
+    background->surf = load_image("check/background2.bmp");
     background->x = 0;
     background->y = 0;
 }
@@ -182,13 +185,70 @@ void handle_keys(const uint8_t *state, s_spaceship *s)
       }
 }
 
-int gameover(SDL_Surface **screen, s_spaceship *s)
+void add_hscores(s_spaceship *s, FILE *f)
 {
-    SDL_Color white = {255, 255, 255};
+    if (hscores_len < 5)
+    {
+        high_scores[hscores_len++] = s->points;
+        fprintf(f, "%d\n", s->points);
+    }
+    else
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            if (s->points > high_scores[i])
+            {
+                high_scores[i] = s->points;
+                fprintf(f, "%d\n", s->points);
+            }
+        }
+    }
+}
+
+void display_hscores(SDL_Surface **screen, FILE *f)
+{
+    SDL_Color white = {255, 255, 255, 255};
     s_bg *backg = malloc(sizeof (s_bg));
     init_background(backg);
     apply_surface(0, 0, backg->surf, *screen);
-    TTF_Font *police = TTF_OpenFont("../check/leadcoat.ttf", 50);
+    TTF_Font *police = TTF_OpenFont("check/leadcoat.ttf", 20);
+    SDL_Rect pos_score;
+    char **scores = malloc(sizeof (char *) * 5);
+    int j = 0;
+    for (int i = 0; i < 5; i++)
+    {
+            char line[20];
+            if (i == 0)
+                fseek(f, 0, SEEK_SET);
+            else
+                fseek(f, 0, SEEK_CUR);
+            if (fgets(line, 20, f))
+            {
+                scores[j] = malloc(sizeof (char) * strlen(line));
+                strcpy(scores[j], line);
+                scores[j++][strlen(line) - 1] = '\0';
+            }
+    }
+    SDL_Surface *s_scores[j];
+    for (int i = 0; i < j; i++)
+    {
+        s_scores[i] = TTF_RenderText_Blended(police, scores[i], white);
+        pos_score.x = (SCREEN_WIDTH - s_scores[i]->w) / 2;
+        pos_score.y = SCREEN_HEIGHT / 2 + 40 * (i - 1);
+        SDL_BlitSurface(s_scores[i], NULL, *screen, &pos_score);
+    }
+    SDL_Flip(*screen);
+    SDL_Delay(5000);
+}
+
+int gameover(SDL_Surface **screen, s_spaceship *s, FILE *f)
+{
+    add_hscores(s, f);
+    SDL_Color white = {255, 255, 255, 255};
+    s_bg *backg = malloc(sizeof (s_bg));
+    init_background(backg);
+    apply_surface(0, 0, backg->surf, *screen);
+    TTF_Font *police = TTF_OpenFont("check/leadcoat.ttf", 50);
     char score[100];
     sprintf(score, "score : %d", s->points);
     SDL_Surface *text = TTF_RenderText_Blended(police, score, white);
@@ -201,6 +261,7 @@ int gameover(SDL_Surface **screen, s_spaceship *s)
     SDL_Delay(5000);
     return 1;
 }
+
 void music()
 {
   int audio_rate = 22050;
@@ -215,7 +276,7 @@ void music()
   }
 
   Mix_Music *music;
-  music = Mix_LoadMUS("../check/beep-1.wav");
+  music = Mix_LoadMUS("check/beep-1.wav");
   Mix_PlayMusic(music, -1);
 }
 
@@ -234,22 +295,35 @@ int main(void)
     init_background(backg);
     music();
     const uint8_t *state = SDL_GetKeyState(NULL);
-    //uint32_t audioLen = 100;
-    //uint32_t audioPos;
-    //launch_audio("son.wav");
-    while (!quit)
+    int option = 1;
+    FILE *f = fopen("save", "a+");
+
+    display_menu(screen, &option, event);
+    if (option == 4)
+        quit = 1;
+    else if (option == 3)
+        display_hscores(&screen, f);
+    else
     {
-        handle_keys(state, spaceship);
-        while (SDL_PollEvent(&event))
-            if (event.type == SDL_QUIT)
-                quit = 1;
-        draw(screen, spaceship, &list_asteroid, backg);
-        if (collision(spaceship, list_asteroid))
-            treat_collision(collision(spaceship, list_asteroid), spaceship);
-        if (spaceship->life <= 0)
-            quit = gameover(&screen, spaceship);
+        while (!quit)
+        {
+            handle_keys(state, spaceship);
+            while (SDL_PollEvent(&event))
+                if (event.type == SDL_QUIT)
+                    quit = 1;
+            draw(screen, spaceship, &list_asteroid, backg);
+            if (collision(spaceship, list_asteroid))
+                treat_collision(collision(spaceship, list_asteroid), spaceship);
+            if (spaceship->life <= 0)
+                quit = gameover(&screen, spaceship, f);
+        }
     }
     //SDL_Delay(3000);
+    free(spaceship);
+    free(backg);
+    free(list_asteroid);
+    SDL_FreeSurface(screen);
+    TTF_Quit();
     SDL_Quit();
     return 0;
 }
